@@ -20,4 +20,5 @@ void main()
 	float dist = dot(fromCenter, fromCenter);
 	fragColor.a *= exp(-0.5*dist/0.1);
 
+
 }

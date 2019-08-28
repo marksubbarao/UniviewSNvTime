@@ -5,6 +5,7 @@ uniform mat4 uv_modelViewProjectionMatrix;
 uniform mat4 uv_modelViewInverseMatrix;
 
 uniform float radiusScale;
+uniform sampler2D stateTexture;
 
 out vec2 texcoord;
 out float type;
@@ -55,7 +56,7 @@ void main()
 
 	vec4 pos = vec4(gl_in[0].gl_Position.x, gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.);
 	
-	if (time >= eventTime){
+	if (time <= eventTime){
 		drawSprite(pos, radiusScale*log10lum, 0);
 	}
 }
