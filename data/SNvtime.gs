@@ -4,20 +4,27 @@ layout(triangle_strip, max_vertices = 4) out;
 uniform mat4 uv_modelViewProjectionMatrix;
 uniform mat4 uv_modelViewInverseMatrix;
 uniform vec4 uv_cameraPos;
+uniform int uv_simulationtimeDays;
+uniform float uv_simulationtimeSeconds;
 
 uniform float radiusScale;
 uniform float SNduration;
 uniform float SNtmin;
 uniform float SNangleMax;
+uniform float SNangleMin;
 uniform bool fadeOutSN;
 uniform bool showBoth;
 uniform float bothYr;
+
+uniform bool useUniviewTime;
 
 uniform sampler2D stateTexture;
 
 out vec2 texcoord;
 out float type;
-out float eventTime;
+out float time;
+
+#define PI 3.1415926535;
 
 // axis should be normalized
 mat3 rotationMatrix(vec3 axis, float angle)
@@ -67,12 +74,16 @@ void main()
 {
 	//get the time from the texture
 	eventTime = texture(stateTexture, vec2(0.5)).r;
+	if (useUniviewTime){
+		float dayfract = uv_simulationtimeSeconds/(24.0*3600.0);
+		eventTime = (uv_simulationtimeDays + dayfract)/365.2425 + 1970.;
+	}
 
-	float time = gl_in[1].gl_Position.x;
+	time = gl_in[1].gl_Position.x;
 	float log10lum = gl_in[1].gl_Position.y;
 	type = gl_in[1].gl_Position.z;
-
-	vec4 pos = vec4(gl_in[0].gl_Position.x, gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.);
+	
+	vec4 pos = vec4(gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.);
 
 	float a1 = 0.1;
 	float a2 = -2.2;
@@ -80,6 +91,10 @@ void main()
 	float tp = SNduration*pow(-1.*(a1 + 1.)/(a2 + 1.), 1./(s*(a1 - a2)) );
 	float useT0 = time - tp;
 	float useTime = eventTime;
+	//offset the time if we want to show both
+	if (showBoth && time > 2020){
+		useTime += bothYr;
+	}
 	if (!fadeOutSN && useTime > time){
 		useTime = time;
 	}
@@ -90,15 +105,27 @@ void main()
 		float dist = length(pos.xyz - uv_cameraPos.xyz);
 		float angle = atan(lum/2., dist);
 		if (angle > SNangleMax){
-			lum = 2.*dist*tan(SNangleMax);
+			lum = 2.*dist*tan(SNangleMax*PI/180.);
+		}
+		if (angle < SNangleMin){
+			lum = 2.*dist*tan(SNangleMin*PI/180.);
+		}
+	//add angle min
+		if (showBoth){
+		
+			if (useT0 > SNtmin && time < 2020){ //past SN
+				drawSprite(pos, radiusScale*lum, 0);
+			}
+			if (useT0 > SNtmin + bothYr){ //showing Nov 2018 and 2023 simultaneously
+				eventTime += bothYr;
+				drawSprite(pos, radiusScale*lum, 0);
+			}
+			
+		} else {
+			if (useT0 > SNtmin){
+				drawSprite(pos, radiusScale*lum, 0);
+			}
 		}
 
-		if (useT0 > SNtmin){
-			drawSprite(pos, radiusScale*lum, 0);
-		}
-		if (showBoth && useT0 + bothYr > SNtmin){ //showing Nov 2018 and 2023 simultaneously
-			drawSprite(pos, radiusScale*lum, 0);
-
-		}
 	}
 }
