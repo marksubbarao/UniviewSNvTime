@@ -10,11 +10,14 @@ uniform float SNduration;
 uniform float SNtmin;
 uniform float SNangleMax;
 uniform bool fadeOutSN;
+uniform bool showBoth;
+uniform float bothYr;
 
 uniform sampler2D stateTexture;
 
 out vec2 texcoord;
 out float type;
+out float eventTime;
 
 // axis should be normalized
 mat3 rotationMatrix(vec3 axis, float angle)
@@ -63,7 +66,7 @@ float SNIaLum(float t, float A, float t0, float tb, float a1, float a2, float s)
 void main()
 {
 	//get the time from the texture
-	float eventTime = texture(stateTexture, vec2(0.5)).r;
+	eventTime = texture(stateTexture, vec2(0.5)).r;
 
 	float time = gl_in[1].gl_Position.x;
 	float log10lum = gl_in[1].gl_Position.y;
@@ -92,6 +95,10 @@ void main()
 
 		if (useT0 > SNtmin){
 			drawSprite(pos, radiusScale*lum, 0);
+		}
+		if (showBoth && useT0 + bothYr > SNtmin){ //showing Nov 2018 and 2023 simultaneously
+			drawSprite(pos, radiusScale*lum, 0);
+
 		}
 	}
 }
