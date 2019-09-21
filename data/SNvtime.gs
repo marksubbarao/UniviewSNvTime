@@ -23,8 +23,9 @@ uniform sampler2D stateTexture;
 out vec2 texcoord;
 out float type;
 out float time;
+out float dflag;
 
-#define PI 3.1415926535;
+#define PI 3.1415926535
 
 // axis should be normalized
 mat3 rotationMatrix(vec3 axis, float angle)
@@ -72,8 +73,10 @@ float SNIaLum(float t, float A, float t0, float tb, float a1, float a2, float s)
 
 void main()
 {
+	dflag = gl_in[2].gl_Position.x;
+	
 	//get the time from the texture
-	eventTime = texture(stateTexture, vec2(0.5)).r;
+	float eventTime = texture(stateTexture, vec2(0.5)).r;
 	if (useUniviewTime){
 		float dayfract = uv_simulationtimeSeconds/(24.0*3600.0);
 		eventTime = (uv_simulationtimeDays + dayfract)/365.2425 + 1970.;
@@ -83,7 +86,7 @@ void main()
 	float log10lum = gl_in[1].gl_Position.y;
 	type = gl_in[1].gl_Position.z;
 	
-	vec4 pos = vec4(gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.);
+	vec4 pos = vec4(-gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.); //should the y be flipped?
 
 	float a1 = 0.1;
 	float a2 = -2.2;
@@ -98,32 +101,35 @@ void main()
 	if (!fadeOutSN && useTime > time){
 		useTime = time;
 	}
-	float lum = SNIaLum(useTime, log10lum, useT0, SNduration, a1, a2, s);
-
-	//limit the size (which is scaled by the luminosity) based on the camera location
-	if (lum > 0){
+	float size = radiusScale*SNIaLum(useTime, log10lum, useT0, SNduration, a1, a2, s);
+	float sizePeak = radiusScale*SNIaLum(time, log10lum, useT0, SNduration, a1, a2, s);
+	float sizeRatio = size/sizePeak;
+	
+	//limit the size at peak (which is scaled by the luminosity) based on the camera location
+	if (sizePeak > 0){
 		float dist = length(pos.xyz - uv_cameraPos.xyz);
-		float angle = atan(lum/2., dist);
-		if (angle > SNangleMax){
-			lum = 2.*dist*tan(SNangleMax*PI/180.);
+		float angle = atan(sizePeak, 2.*dist);
+		if (angle > SNangleMax*PI/180.){
+			sizePeak = 2.*dist*tan(SNangleMax*PI/180.);
 		}
-		if (angle < SNangleMin){
-			lum = 2.*dist*tan(SNangleMin*PI/180.);
+		if (angle < SNangleMin*PI/180.){
+			sizePeak = 2.*dist*tan(SNangleMin*PI/180.);
 		}
-	//add angle min
+		size = sizePeak*sizeRatio;
+		
 		if (showBoth){
 		
 			if (useT0 > SNtmin && time < 2020){ //past SN
-				drawSprite(pos, radiusScale*lum, 0);
+				drawSprite(pos, size, 0);
 			}
 			if (useT0 > SNtmin + bothYr){ //showing Nov 2018 and 2023 simultaneously
 				eventTime += bothYr;
-				drawSprite(pos, radiusScale*lum, 0);
+				drawSprite(pos, size, 0);
 			}
 			
 		} else {
 			if (useT0 > SNtmin){
-				drawSprite(pos, radiusScale*lum, 0);
+				drawSprite(pos, size, 0);
 			}
 		}
 
