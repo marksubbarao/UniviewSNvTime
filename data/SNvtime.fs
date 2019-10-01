@@ -9,6 +9,7 @@ in vec2 texcoord;
 in float type;
 in float time;
 in float dflag;
+
 out vec4 fragColor;
 
 void main()
@@ -20,7 +21,6 @@ void main()
 		//color = texture(cmap2 ,vec2(clamp(type, 0., 0.99), 0.5)).rgb;
 		color = vec3(1,0,1); //magenta
 	}
-
 
 	vec2 fromCenter = texcoord*2. - vec2(1.);
 	float dist = dot(fromCenter, fromCenter);

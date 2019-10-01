@@ -2,6 +2,7 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices = 4) out;
 
 uniform mat4 uv_modelViewProjectionMatrix;
+uniform mat4 uv_modelMatrix;
 uniform mat4 uv_modelViewInverseMatrix;
 uniform vec4 uv_cameraPos;
 uniform int uv_simulationtimeDays;
@@ -86,7 +87,9 @@ void main()
 	float log10lum = gl_in[1].gl_Position.y;
 	type = gl_in[1].gl_Position.z;
 	
-	vec4 pos = vec4(-gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.); //should the y be flipped?
+	vec4 pos = vec4(-gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.); //these flips in x and y are needed to match stripe 82
+
+	vec4 scenePos = uv_modelMatrix*pos;
 
 	float a1 = 0.1;
 	float a2 = -2.2;
@@ -119,10 +122,10 @@ void main()
 		
 		if (showBoth){
 		
-			if (useT0 > SNtmin && time < 2020){ //past SN
+			if (useT0 > SNtmin && time < 2020  && scenePos.x > 0){ //past SN
 				drawSprite(pos, size, 0);
 			}
-			if (useT0 > SNtmin + bothYr){ //showing Nov 2018 and 2023 simultaneously
+			if (useT0 > SNtmin + bothYr  && time > 2020 && scenePos.x < 0){ //showing Nov 2018 and 2023 simultaneously
 				eventTime += bothYr;
 				drawSprite(pos, size, 0);
 			}
