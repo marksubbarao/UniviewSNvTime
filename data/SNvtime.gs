@@ -22,6 +22,7 @@ uniform bool useUniviewTime;
 uniform sampler2D stateTexture;
 
 out vec2 texcoord;
+out float log10lum;
 out float type;
 out float time;
 out float dflag;
@@ -84,7 +85,7 @@ void main()
 	}
 
 	time = gl_in[1].gl_Position.x;
-	float log10lum = gl_in[1].gl_Position.y;
+	log10lum = gl_in[1].gl_Position.y;
 	type = gl_in[1].gl_Position.z;
 	
 	vec4 pos = vec4(-gl_in[0].gl_Position.x, -gl_in[0].gl_Position.y, gl_in[0].gl_Position.z, 1.); //these flips in x and y are needed to match stripe 82
