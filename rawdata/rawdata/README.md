@@ -1,0 +1,1 @@
+Data for the LSST SNe come from the [PLAsTiCC Classification Challenge](https://zenodo.org/record/2539456#.XX-1apNKhTY).  The data file is large, and not included here, but can be downloaded at the website liked above.  
